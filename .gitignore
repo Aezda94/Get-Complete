@@ -1,0 +1,23 @@
+# --- Safety defaults: this repo is currently PUBLIC ---
+# Nothing sensitive gets committed by accident. Relax these only after the
+# repo has been switched to private.
+
+# Signature images — never publish these
+assets/signature*
+assets/*signature*
+
+# Real customer quotes and completed forms (pricing, contacts, terms)
+examples/quotes/*
+examples/completed-forms/*
+form-template/*
+!examples/quotes/.gitkeep
+!examples/completed-forms/.gitkeep
+!form-template/.gitkeep
+
+# Generated output
+output/
+
+# Local tooling
+.venv/
+__pycache__/
+*.pyc
