@@ -1,42 +1,66 @@
 ---
 name: quote-form
-description: Fill out the customer's mandatory quote submission form from one of our quotes, and sign it. Use whenever the user provides a quote (PDF, Word, Excel, or pasted text) and asks for the customer form, the submission form, the quote form, or says they are submitting a quote to this customer. Also use for questions about how a field on that form should be filled.
+description: Fill out and sign the SAISD Request for Quote form from a Get Complete estimate. Use whenever the user provides an estimate or quote PDF and asks for the SAISD form, the customer form, the submission form, the quote form, or says they are submitting a quote to SAISD or San Antonio ISD. Also use for questions about how a field on that form should be filled.
 ---
 
-# Customer quote submission form
+# SAISD Request for Quote
 
-Translates one of our quotes into the customer's required submission form.
-The form is rigid and cannot be changed — reproduce it exactly.
+San Antonio ISD requires this form alongside every quote. The form is rigid
+and cannot be changed. The whole job is one command.
 
-> **STATUS: NOT YET BUILT.** The field map and filler script are pending
-> example quotes and completed forms. Until those exist, do not guess at
-> the mapping — tell the user what is missing instead.
+## Do this
 
-## Inputs
+```bash
+.venv/bin/python scripts/make_form.py path/to/estimate.pdf
+```
 
-- The quote: `examples/quotes/` holds past ones; the user supplies a new one.
-- The blank form: `form-template/`
-- Signature: `assets/signature.png` (transparent background)
-- Field mapping rules: `references/field-map.md`
+Then **report the summary it prints and every warning verbatim**, and give the
+user the output path. Warnings are the point — they mark the places where the
+estimate was ambiguous or a threshold was crossed.
 
-## Procedure
+Useful flags:
 
-1. Read `references/field-map.md` in full before touching the form.
-2. Extract every source value from the quote. Do not infer values that the
-   quote does not state — carry them from `references/constants.md` when they
-   are company constants, and otherwise flag them.
-3. Run `scripts/fill_form.py` to write the filled form. Fill
-   programmatically; never rebuild the document by hand, because the
-   customer's layout must survive byte-for-byte where possible.
-4. Stamp the signature and the submission date.
-5. Write to `output/` and report a short list of: fields filled, fields
-   carried from constants, and anything that needed a judgment call.
+- `--form-date 7/22/2026` — the form date defaults to today, which is what
+  SAISD expects. Override only if backdating to match a submission.
+- `--no-sign` — a draft to review before signing.
+- `--show-payload` — print the extracted values first, for spot-checking.
+- `-o path.pdf` — output location. Defaults to
+  `output/SAISD-RFQ-<campus>-<today>.pdf`.
+
+## When the estimate does not parse
+
+`scripts/extract_quote.py` locates values by column geometry, so a redesigned
+estimate template will make it fail loudly rather than silently mis-fill.
+If that happens:
+
+1. Run `scripts/extract_quote.py estimate.pdf` alone to see how far it gets.
+2. Read `references/field-map.md` before touching anything.
+3. Fix the extractor, or hand-write the payload JSON and call
+   `scripts/fill_form.py payload.json`. Do not fill the PDF by any other
+   route — the number formatting is easy to get wrong in a way that looks
+   fine on screen and prints wrong.
 
 ## Rules
 
-- Never invent a price, lead time, part number, or term. If the quote does
-  not state it, flag it and stop rather than filling a plausible value.
-- Signature goes on only after every other field is filled and checked.
-- Match the customer's formatting conventions exactly — date format, currency
-  symbols, decimal places, uppercase fields. These are recorded in the field
-  map and derived from the completed examples, not assumed.
+- **Never invent a price, quantity, campus, or quote number.** If the estimate
+  does not state it, say so and stop. A wrong number on a form that
+  accompanies an invoice is worse than a delayed form.
+- **Never merge repeated line items.** Two `Plumbing Labor` rows means two
+  techs. Merging destroys crew-size information the scheduler depends on.
+- **Amounts come from the TOTAL column, not PRICE.** PRICE is a unit rate.
+- **Leave the SAISD Acceptance block empty.** Date, Name and Signature there
+  belong to SAISD.
+- The signature is stamped automatically from `assets/signature.png`. It is
+  Amanda Hernandez's real signature — only sign forms she has asked for.
+
+## Layout
+
+| Path | What it is |
+| --- | --- |
+| `scripts/make_form.py` | Estimate PDF in, signed form out. Start here. |
+| `scripts/extract_quote.py` | Estimate PDF → payload JSON. |
+| `scripts/fill_form.py` | Payload JSON → filled, signed PDF. |
+| `form-template/SAISD-Quote-Form-fillable.pdf` | Blank form, unsigned. |
+| `assets/constants.json` | Company name, rep, email, phone. |
+| `assets/signature.png` | Transparent-background signature. |
+| `references/field-map.md` | Every mapping rule and why. |

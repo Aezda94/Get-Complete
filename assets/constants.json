@@ -1,0 +1,13 @@
+{
+  "_comment": "Defaults applied to every SAISD form. Anything in the payload overrides these. The company name has changed more than once - change it here and every future form follows.",
+
+  "company_name": "Get Complete Maintenance and Repair",
+  "rep_name": "Amanda Hernandez",
+  "rep_email": "service@getcompletetx.com",
+  "rep_phone": "(737) 312-7905",
+
+  "_legal_entity": "Complete Plumbing and HVAC Service LLC",
+  "_previously_used_names": [
+    "Get Complete Plumbing and Maintenance"
+  ]
+}
