@@ -331,8 +331,11 @@ def fill(payload: dict, out_path: Path, sign: bool) -> list[str]:
             )
         doc = fitz.open(out_path)
         doc[0].insert_image(SIG_BOX, filename=str(SIGNATURE), keep_proportion=True, overlay=True)
-        doc.saveIncr()
+        # A full rewrite rather than saveIncr(): incremental saves append the
+        # image uncompressed and balloon the file to several hundred KB.
+        buf = doc.tobytes(garbage=3, deflate=True, deflate_images=True)
         doc.close()
+        out_path.write_bytes(buf)
     else:
         warnings.append("form left unsigned (--no-sign)")
 
